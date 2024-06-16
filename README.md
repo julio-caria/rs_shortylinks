@@ -206,3 +206,34 @@ Contabilizando os acessos a partir do redis:
 ```ts
 await redis.zIncrBy('metrics', 1, link.id)
 ```
+
+Rota para puxar os links mais acessados:
+
+```ts
+app.get('/api/metrics', async () => {
+  const result = await redis.zRangeByScoreWithScores('metrics', 0, 50)
+
+  return result
+})
+```
+
+Refinando a rota de métricas para considerar outros termos, por exemplo:
+
+```ts
+app.get('/api/metrics', async () => {
+  const result = await redis.zRangeByScoreWithScores('metrics', 0, 50)
+
+  const metrics = result
+    .sort((a, b) => b.score - a.score) // Organizando por mais acessados primeiro
+    .map(item => { // Percorrendo o array e retornando novos valores, onde renomeio o tipo de retorno desejado
+      return {
+        shortLinkId: Number(item.value),
+        clicks: item.score,
+      }
+    })
+
+  return metrics;
+})
+```
+
+> Poderia ser usado o postgres para realizar esse ranking de links, porém visando otimizações, o Redis se sai melhor, por ser feito especificamente pra isso.

@@ -16,5 +16,3 @@ async function setup() {
 } 
 
 setup();
-
-// 1:09:27
